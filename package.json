@@ -1,0 +1,30 @@
+{
+  "name": "ai-research-content-assistant",
+  "description": "AI-powered research and content assistant integrating Notion, Google Docs, Wikipedia, and Samsung Notes.",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --turbopack",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.15.0",
+    "@vercel/mcp-adapter": "^0.11.1",
+    "next": "15.3.5",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "redis": "^5.5.6",
+    "zod": "^3.25.74"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3",
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "15.3.5",
+    "typescript": "^5"
+  }
+}
