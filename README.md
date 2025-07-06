@@ -1,177 +1,94 @@
-# AI-Research-Content-Assistant
+# AI Research & Content Generation Assistant
 
-This project is a modified clone of a previous project, now adapted to develop an AI-powered research and content assistant. It integrates with tools like Notion, Google Docs, Wikipedia, and Samsung Notes for content aggregation and synthesis.
-
----
-
-## Project Description
-
-This project implements a to-do manager API with add, list, update, and delete operations. It is intended for use with MCP clients and AI tools, and is suitable as a reference or starting point for MCP-based integrations.
+This project is an AI-powered assistant designed to aggregate, synthesize, and deliver research content from multiple sources—including Notion, Google Docs, Wikipedia, and Samsung Notes. Built with Next.js and TypeScript, it exposes modular API endpoints for seamless integration with Claude Desktop (MCP) and similar agentic platforms.
 
 ---
 
 ## Features
-
-- Add, list, update, and delete to-do items
-- Auto-expiry: to-dos are deleted after 3 hours
-- Persistent storage using Redis
-- MCP protocol support for AI and automation workflows
-- Deployable on Vercel
-
----
-
-## Installation
-
-1. **Clone the repository:**
-   ```sh
-   git clone https://github.com/V1997/course-recommender-mcp.git
-   cd course-recommender-mcp
-   ```
-2. **Install dependencies:**
-   ```sh
-   npm install
-   ```
-3. **Configure Redis:**
-   - Use a managed Redis service (Upstash, Redis Cloud, or Vercel Redis integration).
-   - Add your Redis connection string to `.env.local`:
-     ```env
-     REDIS_URL=your_redis_connection_url
-     ```
-4. **Start the development server:**
-   ```sh
-   npm run dev
-   ```
-   The server will be available at [http://localhost:3000](http://localhost:3000)
+- **Modular Integrations:** Easily connect to Notion, Google Docs, Wikipedia, and Samsung Notes.
+- **Normalized Content Model:** Unified data structure for all sources.
+- **Secure Authentication:** Environment-based credential management.
+- **MCP/Claude Desktop Ready:** Exposes endpoints as tools for agentic AI workflows.
+- **Extensible Architecture:** Add new integrations with minimal effort.
 
 ---
 
-## Deployment & Technical Details
+## Getting Started
 
-### Vercel Deployment
+### 1. Clone the Repository
+```sh
+git clone <your-repo-url>
+cd <project-directory>
+```
 
-- Connect your GitHub repository to Vercel.
-- Set the `REDIS_URL` environment variable in Vercel project settings.
-- Vercel will build and deploy on each push to the main branch.
-- The application will be available at a Vercel-provided URL.
+### 2. Install Dependencies
+```sh
+npm install
+```
 
-### Redis Usage
+### 3. Configure Environment Variables
+Create a `.env` file in the project root and add your credentials:
+```
+# Notion
+NOTION_API_KEY=your_notion_secret
 
-- Each to-do is stored as a Redis hash (`todo:{id}`) with fields: `id`, `text`, `completed`, `createdAt`.
-- A Redis list (`todos`) maintains the order of to-do IDs.
-- All Redis operations are performed per request; the Redis client is created and closed in each handler for serverless compatibility.
+# (Add Google, Samsung, etc. as needed)
+```
 
-### Auto-Expiry
-
-- When a to-do is created, a 3-hour TTL is set using Redis `EXPIRE`.
-- After 3 hours, Redis deletes the to-do hash automatically.
-- On list/update, expired IDs are removed from the `todos` list.
+### 4. Run Locally
+```sh
+npm run dev
+```
+The app will be available at [http://localhost:3000](http://localhost:3000).
 
 ---
 
-## Live Chat Examples
+## API & Tool Endpoints
+Endpoints are exposed for each integration and can be used by Claude Desktop or other MCP-compatible agents.
 
-**Add a To-Do**
-```
-User: Remind me to buy groceries later today.
-Assistant: Added "buy groceries" to your to-do list.
-```
-
-**List To-Dos**
-```
-User: What do I need to get done?
-Assistant:
-Here are your current to-dos:
-• Buy groceries [ ]
-```
-
-**Mark a To-Do as Completed**
-```
-User: I finished buying groceries. Mark that as done.
-Assistant: Marked "buy groceries" as completed.
-```
-
-**Delete a To-Do**
-```
-User: Remove "buy groceries" from my list.
-Assistant: Deleted "buy groceries" from your to-dos.
-```
-
-**Delete All To-Dos**
-```
-User: Clear my entire to-do list.
-Assistant: All to-dos have been deleted.
-```
+### Example: Notion Fetch Tool
+- **Endpoint:** `/api/[transport]` (POST)
+- **Input:**
+  ```json
+  {
+    "tool": "Notion Fetch",
+    "input": { "pageId": "YOUR_PAGE_ID" }
+  }
+  ```
+- **Output:**
+  ```json
+  {
+    "content": [
+      { "type": "text", "text": "Page Title" },
+      { "type": "text", "text": "Page body content..." }
+    ]
+  }
+  ```
 
 ---
 
-## Usage
-
-Interact with the To-Do Manager via any MCP-compatible client or with HTTP requests.
-
-**Add a To-Do**
-```bash
-curl -X POST http://localhost:3000/mcp \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": {"name": "To-Do Manager", "arguments": {"action": "add", "text": "Buy groceries"}}}'
-```
-
-**List To-Dos**
-```bash
-curl -X POST http://localhost:3000/mcp \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": {"name": "To-Do Manager", "arguments": {"action": "list"}}}'
-```
-
-**Update a To-Do**
-```bash
-curl -X POST http://localhost:3000/mcp \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc": "2.0", "id": 3, "method": "tools/call", "params": {"name": "To-Do Manager", "arguments": {"action": "update", "todoId": "YOUR_TODO_ID", "completed": true}}}'
-```
-
-**Delete All To-Dos**
-```bash
-curl -X POST http://localhost:3000/mcp \
-  -H "Content-Type: application/json" \
-  -H "Accept: application/json, text/event-stream" \
-  -d '{"jsonrpc": "2.0", "id": 4, "method": "tools/call", "params": {"name": "To-Do Manager", "arguments": {"action": "delete"}}}'
-```
+## Integrations
+- **Notion:** Fetches and normalizes page content. Requires sharing the page with your Notion integration and providing the API key.
+- **Google Docs, Wikipedia, Samsung Notes:** Modular endpoints to be added following the same pattern.
 
 ---
 
-## Technologies Used
+## Security
+- All credentials are managed via environment variables and excluded from version control via `.gitignore`.
+- Never commit sensitive information to the repository.
 
-- TypeScript
-- Next.js
-- Redis
-- @vercel/mcp-adapter
-- Zod
-- Vercel
+---
+
+## Deployment
+- Deploy to [Vercel](https://vercel.com/) or your preferred platform.
+- Set environment variables in your deployment dashboard.
 
 ---
 
 ## Contributing
-
-1. Fork the repository
-2. Create a new branch (`git checkout -b feature/your-feature`)
-3. Make your changes and commit them
-4. Push to your fork and open a Pull Request
+Contributions are welcome! Please open issues or submit pull requests for new integrations, bug fixes, or improvements.
 
 ---
 
 ## License
-
-MIT License. See the [LICENSE](LICENSE) file for details.
-
----
-
-## Contact
-
-- GitHub Issues: [Open an issue](https://github.com/V1997/course-recommender-mcp/issues)
-- Email: patelvasu1997@gmail.com
-- Maintainer: Vasu Patel
-
-This project is open source—use it as a reference or as a starting point for your own MCP development.
+This project is licensed under the MIT License.
