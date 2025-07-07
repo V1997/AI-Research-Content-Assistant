@@ -3,5 +3,19 @@
     "research-content-assistant": {
       "url": "http://localhost:3000/mcp"
     }
-  }
+  },
+  "userCredentials": {
+    "notion": {
+      "apiKey": "YOUR_NOTION_API_KEY_HERE"
+    },
+    "googleDrive": {
+      "clientId": "YOUR_GOOGLE_CLIENT_ID_HERE",
+      "clientSecret": "YOUR_GOOGLE_CLIENT_SECRET_HERE",
+      "refreshToken": "YOUR_GOOGLE_REFRESH_TOKEN_HERE"
+    },
+    "github": {
+      "token": "YOUR_GITHUB_TOKEN_HERE"
+    }
+  },
+  "apiKey": "YOUR_MCP_API_KEY_HERE"
 } 

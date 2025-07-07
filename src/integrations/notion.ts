@@ -1,7 +1,8 @@
 import { Client } from "@notionhq/client";
 import { NormalizedContent } from "./contentModel";
+import mcpConfig from '../../mcp.json';
 
-const notion = new Client({ auth: process.env.NOTION_API_KEY });
+const notion = new Client({ auth: mcpConfig.userCredentials.notion.apiKey });
 
 /**
  * Fetches and normalizes content from a Notion page.

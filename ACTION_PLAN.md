@@ -1,7 +1,7 @@
 # AI Research & Content Assistant – Integration Action Plan
 
 ## Objective
-Integrate external tools (Notion, Google Docs, Wikipedia, Samsung Notes) as modular, secure, and robust endpoints for AI-powered research and content generation.
+Integrate external tools (Notion, Google Drive/Docs) and a company research/resume tailoring module as modular, secure, and robust endpoints for AI-powered research, content generation, and career alignment.
 
 ---
 
@@ -19,43 +19,40 @@ Integrate external tools (Notion, Google Docs, Wikipedia, Samsung Notes) as modu
     - [ ] Normalize data to common format
 - [ ] Expose Notion tool in `route.ts`
 
-### 3. Google Docs Integration
+### 3. Google Drive/Docs Integration
 - [ ] Set up Google API credentials (OAuth)
-- [ ] Implement `googleDocs.ts` module:
+- [ ] Implement `googdrive.ts` module:
     - [ ] Authentication logic
     - [ ] Fetch/read document content by Doc ID
     - [ ] Normalize data to common format
-- [ ] Expose Google Docs tool in `route.ts`
+- [ ] Expose Google Drive/Docs tool in `route.ts`
 
-### 4. Wikipedia/Web Scraping Integration
-- [ ] Implement `wikipedia.ts` (or `webScraper.ts`) module:
-    - [ ] Fetch content by topic/query
-    - [ ] Normalize data to common format
-- [ ] Expose Wikipedia/Web tool in `route.ts`
+### 4. Company Research & Resume Tailoring Integration
+- [ ] Design a module to:
+    - [ ] Extract a company’s core values and tone (from public sources, company website, etc.)
+    - [ ] Gather user achievements from GitHub
+    - [ ] Ingest and parse 3–4 versions of the user’s resume
+    - [ ] Generate questions to explore how the user’s experience reflects company values
+    - [ ] Tailor the resume to a specific job description (provided via Claude Desktop AI chat)
+    - [ ] Adjust resume language, achievements, and GitHub project highlights to align with company culture and job requirements
+    - [ ] Ensure edits are made within the user’s existing resume format
+- [ ] Expose this as a tool in `route.ts` for use by the AI agent
 
-### 5. Samsung Notes Integration
-- [ ] Research Samsung Notes API or export options
-- [ ] Implement `samsungNotes.ts` module:
-    - [ ] Authentication logic (if available)
-    - [ ] Fetch/read note content
-    - [ ] Normalize data to common format
-- [ ] Expose Samsung Notes tool in `route.ts`
-
-### 6. Endpoint & Tool Exposure
+### 5. Endpoint & Tool Exposure
 - [ ] Import all integration modules in `route.ts`
 - [ ] Define a tool for each integration using the handler (e.g., `createMcpHandler`)
 - [ ] Validate input and handle errors for each tool
 
-### 7. Security & Environment
+### 6. Security & Environment
 - [ ] Store API keys and secrets securely (env vars)
 - [ ] Implement token refresh logic for OAuth integrations
 
-### 8. Testing & Validation
+### 7. Testing & Validation
 - [ ] Test each integration module independently
 - [ ] Test tool endpoints via API (Postman/curl)
 - [ ] Validate integration with Claude Desktop/MCP agent
 
-### 9. Documentation
+### 8. Documentation
 - [ ] Document each tool’s input/output and authentication requirements
 - [ ] Update README with integration and usage instructions
 

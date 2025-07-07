@@ -1,8 +1,9 @@
 import { google } from "googleapis";
+import mcpConfig from '../../mcp.json';
 
-const CLIENT_ID = process.env.GOOGLE_CLIENT_ID;
-const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
-const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI;
+const CLIENT_ID = mcpConfig.userCredentials.googleDrive.clientId;
+const CLIENT_SECRET = mcpConfig.userCredentials.googleDrive.clientSecret;
+const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI; // Keep as env or add to mcp.json if needed
 
 const oauth2Client = new google.auth.OAuth2(
   CLIENT_ID,
@@ -10,11 +11,9 @@ const oauth2Client = new google.auth.OAuth2(
   REDIRECT_URI
 );
 
-if (process.env.GOOGLE_REFRESH_TOKEN) {
-  oauth2Client.setCredentials({
-    refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-  });
-}
+oauth2Client.setCredentials({
+  refresh_token: mcpConfig.userCredentials.googleDrive.refreshToken
+});
 
 /**
  * List all Google Docs in the user's Drive.
@@ -305,6 +304,72 @@ export async function listDriveFileRevisions(fileId: string): Promise<any> {
     const drive = google.drive({ version: 'v3', auth: oauth2Client });
     const res = await drive.revisions.list({ fileId });
     return res.data.revisions;
+  } catch (error: any) {
+    return { error: error.message || String(error) };
+  }
+}
+
+/**
+ * Copy/clone a Google Doc or Drive file, preserving all formatting and structure.
+ * @param fileId The file ID to copy
+ * @param name Optional new name for the copy
+ * @param parents Optional array of parent folder IDs for the copy
+ * @returns Metadata of the new file or error
+ */
+export async function copyDriveFile(fileId: string, name?: string, parents?: string[]): Promise<any> {
+  try {
+    const drive = google.drive({ version: 'v3', auth: oauth2Client });
+    const requestBody: any = {};
+    if (name) requestBody.name = name;
+    if (parents) requestBody.parents = parents;
+    const res = await drive.files.copy({
+      fileId,
+      requestBody,
+      fields: '*',
+    });
+    return res.data;
+  } catch (error: any) {
+    return { error: error.message || String(error) };
+  }
+}
+
+/**
+ * Update (replace) the content of a Google Doc using the Docs API.
+ * @param docId The Google Doc document ID
+ * @param newContent The new content to insert (plain text for now)
+ * @returns Success or error
+ */
+export async function updateGoogleDocContent(docId: string, newContent: string): Promise<{ success: boolean } | { error: string }> {
+  try {
+    const docs = google.docs({ version: 'v1', auth: oauth2Client });
+    // 1. Get the current document to determine the content range
+    const doc = await docs.documents.get({ documentId: docId });
+    const endIndex = doc.data.body?.content?.slice(-1)[0]?.endIndex || 1;
+    // Google Docs API: cannot delete the final newline, so stop before it
+    const deleteEndIndex = endIndex > 1 ? endIndex - 1 : 1;
+    // 2. Prepare batchUpdate requests: delete all (except final newline), then insert new content
+    const requests = [];
+    if (deleteEndIndex > 1) {
+      requests.push({
+        deleteContentRange: {
+          range: {
+            startIndex: 1,
+            endIndex: deleteEndIndex,
+          },
+        },
+      });
+    }
+    requests.push({
+      insertText: {
+        location: { index: 1 },
+        text: newContent,
+      },
+    });
+    await docs.documents.batchUpdate({
+      documentId: docId,
+      requestBody: { requests },
+    });
+    return { success: true };
   } catch (error: any) {
     return { error: error.message || String(error) };
   }

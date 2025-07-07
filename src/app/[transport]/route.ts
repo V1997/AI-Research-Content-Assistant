@@ -22,8 +22,77 @@ import {
   deleteDriveFile,
   listDriveFolders,
   shareDriveFile,
-  listDriveFileRevisions
+  listDriveFileRevisions,
+  copyDriveFile,
+  updateGoogleDocContent,
 } from "@/integrations/googdrive";
+import { listGithubRepos, fetchGithubReadme, fetchGithubFile } from "@/integrations/github";
+import { webSearch, searchCompanyCulture } from "@/integrations/websearch";
+import { NextRequest, NextResponse } from 'next/server';
+
+// Simple in-memory rate limiter (per IP)
+const rateLimitMap = new Map();
+const RATE_LIMIT = 100; // requests
+const RATE_LIMIT_WINDOW = 60 * 1000; // 1 minute
+
+function rateLimit(ip: string): boolean {
+  const now = Date.now();
+  if (!rateLimitMap.has(ip)) {
+    rateLimitMap.set(ip, { count: 1, start: now });
+    return false;
+  }
+  const entry = rateLimitMap.get(ip);
+  if (now - entry.start > RATE_LIMIT_WINDOW) {
+    rateLimitMap.set(ip, { count: 1, start: now });
+    return false;
+  }
+  if (entry.count >= RATE_LIMIT) {
+    return true;
+  }
+  entry.count++;
+  return false;
+}
+
+// Allowed origins for CORS
+const ALLOWED_ORIGINS = [
+  'https://your-trusted-origin.com',
+  'http://localhost:3000',
+];
+
+// Allowed API keys (set in Vercel env or config)
+const VALID_API_KEYS = [process.env.ALLOWED_API_KEY];
+
+export async function middleware(req: NextRequest) {
+  // 1. Enforce HTTPS (Vercel does this, but double-check)
+  if (req.headers.get('x-forwarded-proto') !== 'https') {
+    return new NextResponse('HTTPS required', { status: 403 });
+  }
+
+  // 2. API Key Auth
+  const apiKey = req.headers.get('x-api-key');
+  if (!apiKey || !VALID_API_KEYS.includes(apiKey)) {
+    return new NextResponse('Unauthorized', { status: 401 });
+  }
+
+  // 3. Rate Limiting
+  const ip = req.headers.get('x-forwarded-for') || 'unknown';
+  if (rateLimit(ip)) {
+    return new NextResponse('Too Many Requests', { status: 429 });
+  }
+
+  // 4. CORS
+  const origin = req.headers.get('origin');
+  if (origin && !ALLOWED_ORIGINS.includes(origin)) {
+    return new NextResponse('CORS not allowed', { status: 403 });
+  }
+
+  // 5. Input Validation (example for Notion, extend for other tools)
+  // You can add zod validation for each tool's credentials here
+  // ...
+
+  // If all checks pass, continue to handler
+  return NextResponse.next();
+}
 
 const handler = createMcpHandler(
   (server) => {
@@ -322,6 +391,121 @@ const handler = createMcpHandler(
         const result = await listDriveFileRevisions(fileId);
         if (result.error) return { content: [{ type: "text" as const, text: `Error: ${result.error}` }] };
         return { content: [{ type: "text" as const, text: JSON.stringify(result) }] };
+      }
+    );
+    server.tool(
+      "Googdrive Copy File",
+      "Copy/clone a Google Doc or Drive file, preserving all formatting and structure.",
+      {
+        fileId: z.string().describe("The file ID to copy"),
+        name: z.string().optional().describe("Optional new name for the copy"),
+        parents: z.array(z.string()).optional().describe("Optional array of parent folder IDs for the copy")
+      },
+      async ({ fileId, name, parents }) => {
+        const result = await copyDriveFile(fileId, name, parents);
+        if (result.error) {
+          return { content: [{ type: "text" as const, text: `Error: ${result.error}` }] };
+        }
+        return {
+          content: [
+            { type: "text" as const, text: `Copied file ID: ${result.id}` },
+            { type: "text" as const, text: `Name: ${result.name}` },
+            { type: "text" as const, text: `MimeType: ${result.mimeType}` }
+          ]
+        };
+      }
+    );
+    server.tool(
+      "Googdocs Update Content",
+      "Replace the entire content of a Google Doc with new content (overwrites all body content).",
+      {
+        docId: z.string().describe("The Google Doc document ID"),
+        newContent: z.string().describe("The new content to insert (plain text)"),
+      },
+      async ({ docId, newContent }) => {
+        const result = await updateGoogleDocContent(docId, newContent);
+        if (!('success' in result) || result.success !== true) {
+          return { content: [{ type: "text" as const, text: `Error: ${(result as any).error || 'Unknown error'}` }] };
+        }
+        return { content: [{ type: "text" as const, text: `Success: content updated for doc ${docId}` }] };
+      }
+    );
+    server.tool(
+      "GitHub List Repos",
+      "List all GitHub repositories for a user",
+      {
+        username: z.string().describe("The GitHub username")
+      },
+      async ({ username }) => {
+        try {
+          const repos = await listGithubRepos(username);
+          return { content: repos.map(repo => ({ type: "text" as const, text: `${repo.full_name}: ${repo.description}` })) };
+        } catch (e: any) {
+          return { content: [{ type: "text" as const, text: `Error: ${e.message}` }] };
+        }
+      }
+    );
+    server.tool(
+      "GitHub Fetch README",
+      "Fetch the README content for a GitHub repository",
+      {
+        owner: z.string().describe("The repository owner"),
+        repo: z.string().describe("The repository name")
+      },
+      async ({ owner, repo }) => {
+        try {
+          const readme = await fetchGithubReadme(owner, repo);
+          return { content: [{ type: "text" as const, text: readme }] };
+        } catch (e: any) {
+          return { content: [{ type: "text" as const, text: `Error: ${e.message}` }] };
+        }
+      }
+    );
+    server.tool(
+      "GitHub Fetch File",
+      "Fetch a file (e.g., package.json) from a GitHub repository",
+      {
+        owner: z.string().describe("The repository owner"),
+        repo: z.string().describe("The repository name"),
+        path: z.string().describe("The file path in the repository")
+      },
+      async ({ owner, repo, path }) => {
+        try {
+          const file = await fetchGithubFile(owner, repo, path);
+          return { content: [{ type: "text" as const, text: file }] };
+        } catch (e: any) {
+          return { content: [{ type: "text" as const, text: `Error: ${e.message}` }] };
+        }
+      }
+    );
+    server.tool(
+      "Web Search",
+      "Search the web for a query using SerpAPI",
+      {
+        query: z.string().describe("The search query string")
+      },
+      async ({ query }) => {
+        try {
+          const results = await webSearch(query);
+          return { content: results.map((r: any) => ({ type: "text" as const, text: `${r.title}\n${r.link}\n${r.snippet}` })) };
+        } catch (e: any) {
+          return { content: [{ type: "text" as const, text: `Error: ${e.message}` }] };
+        }
+      }
+    );
+    server.tool(
+      "Search Company Culture",
+      "Search for company culture/info by company name using SerpAPI",
+      {
+        company: z.string().describe("The company name")
+      },
+      async ({ company }) => {
+        try {
+          const results = await searchCompanyCulture(company);
+          return { content: results.map((r: any) => ({ type: "text" as const, text: `${r.title}\n${r.link}\n${r.snippet}` })) };
+        } catch (e: any) {
+          return { content: [{ type: "text" as const, text: `Error: ${e.message}` }] };
+        }
       }
     );
   },
