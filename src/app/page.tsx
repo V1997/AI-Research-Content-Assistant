@@ -1,7 +1,9 @@
 export default function Home() {
   return (
     <div>
-      <h1>Welcome to Test MCP server</h1>
-      </div>
+      <h1>
+        AI Research Tool Among The Samsung Notes, Notion, Google Docs and Web Search
+      </h1>
+    </div>
   );
 }

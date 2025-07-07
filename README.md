@@ -1,94 +1,36 @@
-# AI Research & Content Generation Assistant
-
-This project is an AI-powered assistant designed to aggregate, synthesize, and deliver research content from multiple sources—including Notion, Google Docs, Wikipedia, and Samsung Notes. Built with Next.js and TypeScript, it exposes modular API endpoints for seamless integration with Claude Desktop (MCP) and similar agentic platforms.
-
----
-
-## Features
-- **Modular Integrations:** Easily connect to Notion, Google Docs, Wikipedia, and Samsung Notes.
-- **Normalized Content Model:** Unified data structure for all sources.
-- **Secure Authentication:** Environment-based credential management.
-- **MCP/Claude Desktop Ready:** Exposes endpoints as tools for agentic AI workflows.
-- **Extensible Architecture:** Add new integrations with minimal effort.
-
----
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
 
-### 1. Clone the Repository
-```sh
-git clone <your-repo-url>
-cd <project-directory>
-```
+First, run the development server:
 
-### 2. Install Dependencies
-```sh
-npm install
-```
-
-### 3. Configure Environment Variables
-Create a `.env` file in the project root and add your credentials:
-```
-# Notion
-NOTION_API_KEY=your_notion_secret
-
-# (Add Google, Samsung, etc. as needed)
-```
-
-### 4. Run Locally
-```sh
+```bash
 npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
-The app will be available at [http://localhost:3000](http://localhost:3000).
 
----
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-## API & Tool Endpoints
-Endpoints are exposed for each integration and can be used by Claude Desktop or other MCP-compatible agents.
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-### Example: Notion Fetch Tool
-- **Endpoint:** `/api/[transport]` (POST)
-- **Input:**
-  ```json
-  {
-    "tool": "Notion Fetch",
-    "input": { "pageId": "YOUR_PAGE_ID" }
-  }
-  ```
-- **Output:**
-  ```json
-  {
-    "content": [
-      { "type": "text", "text": "Page Title" },
-      { "type": "text", "text": "Page body content..." }
-    ]
-  }
-  ```
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
----
+## Learn More
 
-## Integrations
-- **Notion:** Fetches and normalizes page content. Requires sharing the page with your Notion integration and providing the API key.
-- **Google Docs, Wikipedia, Samsung Notes:** Modular endpoints to be added following the same pattern.
+To learn more about Next.js, take a look at the following resources:
 
----
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-## Security
-- All credentials are managed via environment variables and excluded from version control via `.gitignore`.
-- Never commit sensitive information to the repository.
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
----
+## Deploy on Vercel
 
-## Deployment
-- Deploy to [Vercel](https://vercel.com/) or your preferred platform.
-- Set environment variables in your deployment dashboard.
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
----
-
-## Contributing
-Contributions are welcome! Please open issues or submit pull requests for new integrations, bug fixes, or improvements.
-
----
-
-## License
-This project is licensed under the MIT License.
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

@@ -2,5 +2,5 @@ export interface NormalizedContent {
   title: string;
   body: string;
   source: string;
-  metadata?: Record<string, unknown>;
+  metadata?: Record<string, any>;
 } 
